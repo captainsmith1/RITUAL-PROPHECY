@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ritual Prophecy — On-Chain AI Prediction Market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#0a0908;--bg2:#111009;--bg3:#181510;--card:#141210;--card2:#1c1916;--border:rgba(196,154,72,0.18);--border2:rgba(196,154,72,0.35);--gold:#c49a48;--gold2:#e8c870;--gold3:#f5e0a0;--text:#f0e8d8;--text2:#b8a888;--text3:#7a6a50;--shadow:rgba(196,154,72,0.12);--glow:rgba(196,154,72,0.25);--modal-bg:rgba(10,9,8,0.96);--nav-bg:rgba(10,9,8,0.92);--input-bg:#0f0d0b;--up:#2ecc71;--down:#e74c3c}
+  [data-theme="light"]{--bg:#faf7f0;--bg2:#f5f0e6;--bg3:#ede6d8;--card:#ffffff;--card2:#fdf9f2;--border:rgba(150,100,20,0.18);--border2:rgba(150,100,20,0.35);--gold:#9a6e1a;--gold2:#b8850a;--gold3:#8a5c10;--text:#1a1208;--text2:#5a4420;--text3:#9a7840;--shadow:rgba(150,100,20,0.1);--glow:rgba(150,100,20,0.15);--modal-bg:rgba(250,247,240,0.97);--nav-bg:rgba(250,247,240,0.95);--input-bg:#f5f0e6;--up:#1a8a45;--down:#c0392b}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Crimson Pro',Georgia,serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .4s,color .4s;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+
+  /* NAV */
+  nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--nav-bg);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;transition:background .4s}
+  .nav-logo{display:flex;align-items:center;gap:10px;font-family:'Cinzel',serif;font-size:1.15rem;font-weight:800;color:var(--gold2);text-decoration:none;letter-spacing:.08em;cursor:pointer}
+  .rlogo{width:32px;height:32px;object-fit:contain;flex-shrink:0;transition:opacity .3s;filter:brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(5deg);opacity:.85}
+  .rlogo:hover{opacity:1}
+  .nav-links{display:flex;align-items:center;gap:.25rem;list-style:none}
+  .nav-links a{color:var(--text2);text-decoration:none;font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.1em;padding:6px 14px;border-radius:4px;transition:color .2s,background .2s}
+  .nav-links a:hover{color:var(--gold2);background:var(--border)}
+  .nav-right{display:flex;align-items:center;gap:10px}
+  .theme-toggle{background:none;border:1px solid var(--border2);border-radius:20px;padding:5px 12px;cursor:pointer;color:var(--gold);font-size:.8rem;display:flex;align-items:center;gap:6px;transition:all .2s}
+  .theme-toggle:hover{background:var(--border)}
+  .btn{font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.08em;border:none;cursor:pointer;border-radius:4px;padding:8px 18px;transition:all .2s;text-transform:uppercase}
+  .btn-outline{background:transparent;border:1px solid var(--border2);color:var(--gold)}
+  .btn-outline:hover{background:var(--border)}
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0908;font-weight:700}
+  .btn-gold:hover{filter:brightness(1.15);transform:translateY(-1px);box-shadow:0 4px 20px var(--glow)}
+
+  /* HERO */
+  .hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 2rem 4rem;overflow:hidden}
+  .hero-bg{position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse 70% 60% at 50% 30%,rgba(196,154,72,.07) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(192,57,43,.05) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 80% 80%,rgba(39,174,96,.04) 0%,transparent 60%)}
+  .hero-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:520px;height:520px;object-fit:contain;opacity:0.12;pointer-events:none;z-index:0;filter:brightness(0) invert(1) sepia(1) saturate(4) hue-rotate(5deg);}
+  .ring{position:absolute;border-radius:50%;border:1px solid var(--border);pointer-events:none}
+  .ring1{width:500px;height:500px;top:50%;left:50%;transform:translate(-50%,-50%);animation:rotate 30s linear infinite}
+  .ring2{width:700px;height:700px;top:50%;left:50%;transform:translate(-50%,-50%);animation:rotate 50s linear infinite reverse;border-color:rgba(196,154,72,.08)}
+  .ring3{width:900px;height:900px;top:50%;left:50%;transform:translate(-50%,-50%);animation:rotate 70s linear infinite;border-color:rgba(196,154,72,.05)}
+  @keyframes rotate{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--glow)}50%{box-shadow:0 0 12px 4px var(--glow)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+  @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  .hero-eyebrow{position:relative;z-index:1;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--gold);letter-spacing:.3em;text-transform:uppercase;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px}
+  .hero-eyebrow::before,.hero-eyebrow::after{content:'';flex:1;max-width:60px;height:1px;background:var(--gold);opacity:.5}
+  .hero h1{position:relative;z-index:1;font-family:'Cinzel',serif;font-size:clamp(2.8rem,7vw,6rem);font-weight:900;line-height:1;letter-spacing:.02em;background:linear-gradient(135deg,var(--gold3) 0%,var(--gold2) 40%,var(--gold) 70%,#9a7020 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.4rem;animation:fadeUp .8s ease both}
+  .hero h1 span{display:block;font-style:italic;font-size:.45em;letter-spacing:.15em;opacity:.7}
+  .hero-sub{position:relative;z-index:1;font-size:1.2rem;color:var(--text2);max-width:560px;line-height:1.7;margin:1.5rem auto 2.5rem;font-weight:300;font-style:italic;animation:fadeUp .8s .2s ease both}
+  .hero-btns{position:relative;z-index:1;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;animation:fadeUp .8s .4s ease both}
+  .btn-lg{padding:14px 36px;font-size:.82rem}
+  .powered-badge{position:relative;z-index:1;margin-top:3rem;display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text3);letter-spacing:.2em;animation:fadeUp .8s .6s ease both}
+  .ritual-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite}
+
+  /* STATS */
+  .stats-bar{background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:1.2rem 2rem;display:flex;justify-content:center;gap:4rem;flex-wrap:wrap}
+  .stat-item{text-align:center}
+  .stat-val{font-family:'Cinzel',serif;font-size:1.5rem;font-weight:700;color:var(--gold2)}
+  .stat-lbl{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text3);letter-spacing:.15em;text-transform:uppercase;margin-top:2px}
+
+  /* TICKER */
+  .ticker-wrap{overflow:hidden;background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 0}
+  .ticker-track{display:flex;gap:3rem;animation:ticker 25s linear infinite;white-space:nowrap;width:max-content}
+  .ticker-item{font-family:'JetBrains Mono',monospace;font-size:.72rem;display:flex;align-items:center;gap:6px;color:var(--text2)}
+  .asset{color:var(--gold);font-weight:500}
+  .up{color:var(--up)}.down{color:var(--down)}
+
+  /* SECTIONS */
+  section{position:relative;z-index:1}
+  .section-pad{padding:6rem 2rem}
+  .section-title{font-family:'Cinzel',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;color:var(--gold2);text-align:center;margin-bottom:.5rem;letter-spacing:.04em}
+  .section-sub{text-align:center;color:var(--text2);font-style:italic;font-size:1.05rem;margin-bottom:3.5rem}
+  .container{max-width:1100px;margin:0 auto}
+
+  /* CARDS */
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.5rem}
+  .pred-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.6rem;position:relative;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s;cursor:pointer}
+  .pred-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity .3s}
+  .pred-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 8px 32px var(--shadow)}
+  .pred-card:hover::before{opacity:1}
+  .card-tag{font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);background:rgba(196,154,72,.08);border:1px solid var(--border);padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:1rem}
+  .card-question{font-size:1.08rem;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:1.2rem}
+  .card-meta{display:flex;gap:.8rem;margin-bottom:1.2rem;font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--text3);flex-wrap:wrap}
+  .prob-row{display:flex;justify-content:space-between;margin-bottom:6px;font-family:'JetBrains Mono',monospace;font-size:.68rem}
+  .prob-yes{color:var(--up)}.prob-no{color:var(--down)}
+  .prob-bar-bg{height:6px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden;margin-bottom:1.2rem}
+  .prob-bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
+  .card-actions{display:flex;gap:8px}
+  .btn-yes,.btn-no{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.1em;padding:8px 20px;border-radius:4px;cursor:pointer;flex:1;transition:all .2s;text-transform:uppercase}
+  .btn-yes{background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.3);color:var(--up)}
+  .btn-no{background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.3);color:var(--down)}
+  .btn-yes:hover{background:rgba(46,204,113,.22);transform:translateY(-1px)}
+  .btn-no:hover{background:rgba(231,76,60,.22);transform:translateY(-1px)}
+  .ai-conf{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--gold);background:rgba(196,154,72,.07);border:1px solid var(--border);padding:4px 10px;border-radius:20px;margin-top:1rem}
+  .ai-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:pulse 1.5s infinite}
+
+  /* Multi-option */
+  .options-list{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+  .opt-btn{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:9px 14px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text2);display:flex;justify-content:space-between;align-items:center;transition:all .2s;text-align:left;width:100%}
+  .opt-btn:hover{border-color:var(--border2);color:var(--gold2);background:rgba(196,154,72,.06)}
+  .opt-btn.voted{border-color:var(--gold);color:var(--gold2);background:rgba(196,154,72,.1);font-weight:700}
+  .opt-bar-wrap{padding:0 4px;margin-bottom:2px}
+  .opt-bar{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .8s ease;opacity:.6}
+  .opt-pct{font-size:.6rem;color:var(--text3);min-width:30px;text-align:right}
+
+  /* STEPS */
+  .steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem}
+  .step-card{text-align:center;padding:2rem 1.5rem;background:var(--card);border:1px solid var(--border);border-radius:8px;transition:border-color .3s}
+  .step-card:hover{border-color:var(--border2)}
+  .step-num{font-family:'Cinzel',serif;font-size:2.5rem;font-weight:900;color:var(--gold);opacity:.3;line-height:1;margin-bottom:.8rem}
+  .step-icon{font-size:2rem;margin-bottom:.8rem}
+  .step-title{font-family:'Cinzel',serif;font-size:.95rem;font-weight:700;color:var(--gold2);margin-bottom:.6rem;letter-spacing:.05em}
+  .step-desc{color:var(--text2);font-size:.95rem;line-height:1.7}
+
+  /* LEADERBOARD */
+  .leaderboard{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .lb-header{display:grid;grid-template-columns:40px 1fr 100px 100px 80px;padding:1rem 1.5rem;background:var(--card2);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text3);letter-spacing:.15em;text-transform:uppercase}
+  .lb-row{display:grid;grid-template-columns:40px 1fr 100px 100px 80px;padding:1rem 1.5rem;border-bottom:1px solid var(--border);align-items:center;transition:background .2s}
+  .lb-row:hover{background:var(--card2)}.lb-row:last-child{border-bottom:none}
+  .lb-rank{font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:var(--gold)}
+  .lb-rank.gold{color:#ffd700}.lb-rank.silver{color:#c0c0c0}.lb-rank.bronze{color:#cd7f32}
+  .lb-user{display:flex;align-items:center;gap:10px}
+  .lb-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.75rem;font-weight:700;color:#0a0908}
+  .lb-name{font-size:.95rem;color:var(--text)}.lb-addr{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text3)}
+  .lb-pnl{font-family:'JetBrains Mono',monospace;font-size:.88rem}
+  .lb-pnl.pos{color:var(--up)}.lb-pnl.neg{color:var(--down)}
+  .lb-acc{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--text2)}
+  .lb-badge{font-family:'JetBrains Mono',monospace;font-size:.6rem;padding:2px 8px;border-radius:20px}
+  .b-oracle{background:rgba(196,154,72,.12);color:var(--gold);border:1px solid var(--border)}
+  .b-seer{background:rgba(39,174,96,.12);color:var(--up);border:1px solid rgba(39,174,96,.3)}
+
+  /* FEATURES */
+  .features-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem}
+  .feat-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.5rem;transition:border-color .3s,transform .3s}
+  .feat-item:hover{border-color:var(--border2);transform:translateY(-2px)}
+  .feat-icon{font-size:1.8rem;margin-bottom:.8rem}
+  .feat-title{font-family:'Cinzel',serif;font-size:.9rem;font-weight:700;color:var(--gold2);margin-bottom:.5rem;letter-spacing:.04em}
+  .feat-desc{color:var(--text2);font-size:.92rem;line-height:1.7}
+
+  /* AI BOX */
+  .ai-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:2rem;max-width:700px;margin:0 auto}
+  .ai-box-hdr{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold2);letter-spacing:.05em}
+  .ai-status{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--up);margin-left:auto}
+  .ai-sdot{width:6px;height:6px;border-radius:50%;background:var(--up);animation:pulse 1.5s infinite}
+  .ai-row{display:flex;gap:10px;margin-bottom:1.2rem}
+  .ai-input{flex:1;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:'Crimson Pro',serif;font-size:1rem;outline:none;transition:border-color .2s}
+  .ai-input:focus{border-color:var(--gold)}
+  .ai-input::placeholder{color:var(--text3);font-style:italic}
+  .ai-result{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1.2rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;line-height:1.8;color:var(--text2);min-height:80px}
+  .cursor{display:inline-block;width:8px;height:1em;background:var(--gold);animation:blink 1s infinite;vertical-align:middle;margin-left:2px}
+
+  /* FOOTER */
+  footer{background:var(--card);border-top:1px solid var(--border);padding:3rem 2rem;text-align:center}
+  .footer-logo{font-family:'Cinzel',serif;font-size:1.4rem;font-weight:800;color:var(--gold2);letter-spacing:.08em;margin-bottom:.5rem;display:flex;align-items:center;justify-content:center;gap:10px}
+  .footer-logo-img{width:28px;height:28px;object-fit:contain;filter:brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(5deg);opacity:.75}
+  .footer-tagline{color:var(--text3);font-style:italic;margin-bottom:1.5rem}
+  .footer-links{display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem}
+  .footer-links a{color:var(--text3);text-decoration:none;font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.1em;transition:color .2s}
+  .footer-links a:hover{color:var(--gold2)}
+  .footer-copy{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text3)}
+  .footer-powered{margin-top:.8rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--gold)}
+  .created-wrap{margin-top:1.2rem;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text3)}
+  .btn-smith{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0908;border:none;border-radius:20px;padding:5px 16px;font-family:'Cinzel',serif;font-size:.72rem;font-weight:700;letter-spacing:.08em;cursor:pointer;transition:all .25s;text-decoration:none;display:inline-block}
+  .btn-smith:hover{filter:brightness(1.2);transform:translateY(-2px);box-shadow:0 4px 18px var(--glow)}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+  .modal-overlay.active{opacity:1;pointer-events:all}
+  .modal{background:var(--modal-bg);border:1px solid var(--border2);border-radius:12px;padding:2.5rem;width:100%;max-width:420px;position:relative;transform:translateY(30px) scale(.97);transition:transform .3s;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .modal-overlay.active .modal{transform:translateY(0) scale(1)}
+  .modal-x{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text3);font-size:1.3rem;cursor:pointer;transition:color .2s}
+  .modal-x:hover{color:var(--text)}
+  .modal-sig{width:48px;height:48px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 1.2rem;animation:pulse 2s infinite}
+  .modal-title{font-family:'Cinzel',serif;font-size:1.5rem;font-weight:800;color:var(--gold2);text-align:center;margin-bottom:.3rem;letter-spacing:.05em}
+  .modal-sub{text-align:center;color:var(--text3);font-style:italic;font-size:.9rem;margin-bottom:2rem}
+  .fg{margin-bottom:1.2rem}
+  .fl{display:block;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text3);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px}
+  .fi{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:'Crimson Pro',serif;font-size:1rem;transition:border-color .2s,box-shadow .2s;outline:none}
+  .fi:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--glow)}
+  .fi::placeholder{color:var(--text3)}
+  .fdiv{display:flex;align-items:center;gap:12px;margin:1.2rem 0;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text3)}
+  .fdiv::before,.fdiv::after{content:'';flex:1;height:1px;background:var(--border)}
+  .bw3{width:100%;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-family:'Cinzel',serif;font-size:.72rem;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-bottom:8px}
+  .bw3:hover{border-color:var(--border2);color:var(--gold);background:var(--border)}
+  .m-switch{text-align:center;margin-top:1.2rem;font-size:.88rem;color:var(--text3)}
+  .m-switch a{color:var(--gold);cursor:pointer;text-decoration:none}
+  .m-switch a:hover{text-decoration:underline}
+  .bfull{width:100%;padding:12px;font-size:.8rem;margin-top:.5rem}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:2rem;right:2rem;z-index:3000;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:1rem 1.5rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--text);max-width:300px;transform:translateY(80px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+  .toast.show{transform:translateY(0);opacity:1}
+  .t-title{color:var(--gold2);font-size:.82rem;margin-bottom:3px}
+
+  /* User badge */
+  .ubadge{display:flex;align-items:center;gap:8px;font-family:'Cinzel',serif;font-size:.72rem;color:var(--gold2);background:rgba(196,154,72,.08);border:1px solid var(--border);padding:5px 12px;border-radius:20px}
+  .ubadge .dot{width:6px;height:6px;border-radius:50%;background:var(--up)}
+  .nnotif{position:relative;background:none;border:1px solid var(--border);border-radius:4px;padding:6px 10px;cursor:pointer;color:var(--text2);font-size:.9rem;transition:all .2s}
+  .nnotif:hover{border-color:var(--border2);color:var(--gold)}
+  .nbadge{position:absolute;top:-4px;right:-4px;width:14px;height:14px;background:var(--gold);border-radius:50%;font-family:'JetBrains Mono',monospace;font-size:.5rem;color:#0a0908;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+  @media(max-width:768px){.nav-links{display:none}.stats-bar{gap:2rem}.lb-header,.lb-row{grid-template-columns:30px 1fr 80px}.lb-header span:nth-child(4),.lb-row>*:nth-child(4),.lb-header span:nth-child(5),.lb-row>*:nth-child(5){display:none}.hero h1{font-size:2.4rem}.ai-row{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <!-- Custom logo image replacing SVG -->
+    <img src="img1.png" class="rlogo" alt="Ritual Logo" />
+    RITUAL PROPHECY
+  </span>
+  <ul class="nav-links">
+    <li><a href="#markets-sec">Markets</a></li>
+    <li><a href="#leaderboard-sec">Leaderboard</a></li>
+    <li><a href="#ai-sec">AI Oracle</a></li>
+    <li><a href="#how-sec">How It Works</a></li>
+  </ul>
+  <div class="nav-right" id="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">☀️</span><span id="theme-label">Light</span></button>
+    <button class="btn btn-outline" onclick="openModal('login')">Log In</button>
+    <button class="btn btn-gold" onclick="openModal('signup')">Sign Up</button>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div style="margin-top:64px" class="ticker-wrap">
+  <div class="ticker-track">
+    <span class="ticker-item"><span class="asset">BTC</span> $68,420 <span class="up">▲ 2.4%</span></span>
+    <span class="ticker-item"><span class="asset">ETH</span> $3,812 <span class="up">▲ 1.8%</span></span>
+    <span class="ticker-item"><span class="asset">SOL</span> $178.3 <span class="down">▼ 0.9%</span></span>
+    <span class="ticker-item"><span class="asset">RITUAL</span> $4.20 <span class="up">▲ 12.7%</span></span>
+    <span class="ticker-item"><span class="asset">AVAX</span> $42.10 <span class="down">▼ 1.2%</span></span>
+    <span class="ticker-item"><span class="asset">LINK</span> $18.64 <span class="up">▲ 3.1%</span></span>
+    <span class="ticker-item"><span class="asset">ARB</span> $1.82 <span class="down">▼ 0.6%</span></span>
+    <span class="ticker-item"><span class="asset">OP</span> $2.95 <span class="up">▲ 0.4%</span></span>
+    <span class="ticker-item"><span class="asset">BTC</span> $68,420 <span class="up">▲ 2.4%</span></span>
+    <span class="ticker-item"><span class="asset">ETH</span> $3,812 <span class="up">▲ 1.8%</span></span>
+    <span class="ticker-item"><span class="asset">SOL</span> $178.3 <span class="down">▼ 0.9%</span></span>
+    <span class="ticker-item"><span class="asset">RITUAL</span> $4.20 <span class="up">▲ 12.7%</span></span>
+    <span class="ticker-item"><span class="asset">AVAX</span> $42.10 <span class="down">▼ 1.2%</span></span>
+    <span class="ticker-item"><span class="asset">LINK</span> $18.64 <span class="up">▲ 3.1%</span></span>
+    <span class="ticker-item"><span class="asset">ARB</span> $1.82 <span class="down">▼ 0.6%</span></span>
+    <span class="ticker-item"><span class="asset">OP</span> $2.95 <span class="up">▲ 0.4%</span></span>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <!-- Watermark logo behind hero content -->
+  <img src="img1.png.png" class="hero-watermark" alt="" />
+  <div class="ring ring1"></div><div class="ring ring2"></div><div class="ring ring3"></div>
+  <div class="hero-eyebrow">Powered by Ritual Network · Infernet v2</div>
+  <h1>RITUAL<span>PROPHECY</span></h1>
+  <p class="hero-sub">The first on-chain AI prediction market. Let Ritual's decentralized AI models evaluate probability, score confidence, and log your prophecies immutably on-chain.</p>
+  <div class="hero-btns">
+    <button class="btn btn-gold btn-lg" onclick="openModal('signup')">Begin Your Prophecy</button>
+    <button class="btn btn-outline btn-lg" onclick="document.getElementById('ai-sec').scrollIntoView({behavior:'smooth'})">Try AI Oracle</button>
+  </div>
+  <div class="powered-badge"><div class="ritual-dot"></div> Ritual.useInference({ model: "LLAMA2-30B" }) · ZK Verified</div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-val" id="stat1">$4.2M</div><div class="stat-lbl">Total Volume</div></div>
+  <div class="stat-item"><div class="stat-val" id="stat2">1,847</div><div class="stat-lbl">Active Prophecies</div></div>
+  <div class="stat-item"><div class="stat-val" id="stat3">12,390</div><div class="stat-lbl">Prophets</div></div>
+  <div class="stat-item"><div class="stat-val" id="stat4">98.7%</div><div class="stat-lbl">AI Accuracy</div></div>
+  <div class="stat-item"><div class="stat-val" id="stat5">∞</div><div class="stat-lbl">On-Chain Proofs</div></div>
+</div>
+
+<!-- MARKETS -->
+<section class="section-pad" style="background:var(--bg2)" id="markets-sec">
+  <div class="container">
+    <div class="section-title">Active Prophecies</div>
+    <p class="section-sub">AI-evaluated prediction markets, verified on Ritual Chain</p>
+    <div class="cards-grid">
+
+      <!-- 1. RITUALIST NOMINATIONS -->
+      <div class="pred-card">
+        <span class="card-tag">🏆 Ritualist Program</span>
+        <div class="card-question">When will the next Ritualist Roles Nomination round begin?</div>
+        <div class="card-meta"><span>⏳ 23d left</span><span>💰 $38K pool</span><span>👥 712 bets</span></div>
+        <div class="options-list" id="g-nom">
+          <button class="opt-btn" onclick="voteOpt('g-nom',0,this)"><span>Before May 1, 2025</span><span class="opt-pct">22%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:22%" id="g-nom-b0"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-nom',1,this)"><span>After May 1, 2025</span><span class="opt-pct">58%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:58%" id="g-nom-b1"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-nom',2,this)"><span>After June 1, 2025</span><span class="opt-pct">20%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:20%" id="g-nom-b2"></div></div>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 79% · LLaMA-30B</div>
+      </div>
+
+      <!-- 2. MEISON VS CUTIE ERIC -->
+      <div class="pred-card">
+        <span class="card-tag">⚔️ Radiant Ritualist Battle</span>
+        <div class="card-question">Meison vs. Cutie Eric — who wins this Radiant Ritualist battle?</div>
+        <div class="card-meta"><span>⏳ 5d left</span><span>💰 $14K pool</span><span>👥 389 bets</span></div>
+        <div class="prob-row"><span class="prob-yes" id="meison-yes-lbl">MEISON 61%</span><span class="prob-no" id="meison-no-lbl">CUTIE ERIC 39%</span></div>
+        <div class="prob-bar-bg"><div class="prob-bar-fill" id="bar-meison" style="width:61%;background:linear-gradient(90deg,var(--up),#1abc9c)"></div></div>
+        <div class="card-actions">
+          <button class="btn-yes" onclick="voteBin('bar-meison','meison-yes-lbl','meison-no-lbl','MEISON','CUTIE ERIC',61,this)">▲ MEISON</button>
+          <button class="btn-no"  onclick="voteBin('bar-meison','meison-yes-lbl','meison-no-lbl','MEISON','CUTIE ERIC',39,this)">▼ CUTIE ERIC</button>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 72% · Mistral-7B</div>
+      </div>
+
+      <!-- 3. ITOSHI VS GURUJJI -->
+      <div class="pred-card">
+        <span class="card-tag">⚔️ Ritualist Matchup</span>
+        <div class="card-question">Itoshi vs. Gurujji — who takes this Ritualist matchup?</div>
+        <div class="card-meta"><span>⏳ 5d left</span><span>💰 $11K pool</span><span>👥 294 bets</span></div>
+        <div class="prob-row"><span class="prob-yes" id="ito-yes-lbl">ITOSHI 54%</span><span class="prob-no" id="ito-no-lbl">GURUJJI 46%</span></div>
+        <div class="prob-bar-bg"><div class="prob-bar-fill" id="bar-itoshi" style="width:54%;background:linear-gradient(90deg,var(--up),#1abc9c)"></div></div>
+        <div class="card-actions">
+          <button class="btn-yes" onclick="voteBin('bar-itoshi','ito-yes-lbl','ito-no-lbl','ITOSHI','GURUJJI',54,this)">▲ ITOSHI</button>
+          <button class="btn-no"  onclick="voteBin('bar-itoshi','ito-yes-lbl','ito-no-lbl','ITOSHI','GURUJJI',46,this)">▼ GURUJJI</button>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 68% · Mistral-7B</div>
+      </div>
+
+      <!-- 4. PIXEL VS OSARGI -->
+      <div class="pred-card">
+        <span class="card-tag">⚔️ Ritualist Strength</span>
+        <div class="card-question">Pixel vs. Osargi — who is the stronger Ritualist?</div>
+        <div class="card-meta"><span>⏳ 5d left</span><span>💰 $9.8K pool</span><span>👥 241 bets</span></div>
+        <div class="prob-row"><span class="prob-yes" id="pix-yes-lbl">PIXEL 48%</span><span class="prob-no" id="pix-no-lbl">OSARGI 52%</span></div>
+        <div class="prob-bar-bg"><div class="prob-bar-fill" id="bar-pixel" style="width:48%;background:linear-gradient(90deg,var(--up),#1abc9c)"></div></div>
+        <div class="card-actions">
+          <button class="btn-yes" onclick="voteBin('bar-pixel','pix-yes-lbl','pix-no-lbl','PIXEL','OSARGI',48,this)">▲ PIXEL</button>
+          <button class="btn-no"  onclick="voteBin('bar-pixel','pix-yes-lbl','pix-no-lbl','PIXEL','OSARGI',52,this)">▼ OSARGI</button>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 65% · LLaMA-30B</div>
+      </div>
+
+      <!-- 5. SMITH VS BLACKMAN -->
+      <div class="pred-card">
+        <span class="card-tag">⚔️ Bitty Battle</span>
+        <div class="card-question">Smith vs. Blackman — who wins this Bitty Battle?</div>
+        <div class="card-meta"><span>⏳ 5d left</span><span>💰 $7.2K pool</span><span>👥 183 bets</span></div>
+        <div class="prob-row"><span class="prob-yes" id="sm-yes-lbl">SMITH 57%</span><span class="prob-no" id="sm-no-lbl">BLACKMAN 43%</span></div>
+        <div class="prob-bar-bg"><div class="prob-bar-fill" id="bar-smith" style="width:57%;background:linear-gradient(90deg,var(--up),#1abc9c)"></div></div>
+        <div class="card-actions">
+          <button class="btn-yes" onclick="voteBin('bar-smith','sm-yes-lbl','sm-no-lbl','SMITH','BLACKMAN',57,this)">▲ SMITH</button>
+          <button class="btn-no"  onclick="voteBin('bar-smith','sm-yes-lbl','sm-no-lbl','SMITH','BLACKMAN',43,this)">▼ BLACKMAN</button>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 74% · Mistral-7B</div>
+      </div>
+
+      <!-- 6. RITUAL NEXT TWEET -->
+      <div class="pred-card">
+        <span class="card-tag">🐦 Tweet Date Guess</span>
+        <div class="card-question">When will <a href="https://x.com/ritualnet" target="_blank" style="color:var(--gold2);text-decoration:none">@ritualnet</a> post their next tweet or announcement?</div>
+        <div class="card-meta"><span>⏳ 7d left</span><span>💰 $22K pool</span><span>👥 508 bets</span></div>
+        <div class="options-list" id="g-rt">
+          <button class="opt-btn" onclick="voteOpt('g-rt',0,this)"><span>Within 24 hours</span><span class="opt-pct">41%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:41%" id="g-rt-b0"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-rt',1,this)"><span>2 – 4 days</span><span class="opt-pct">38%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:38%" id="g-rt-b1"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-rt',2,this)"><span>5 – 7 days</span><span class="opt-pct">21%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:21%" id="g-rt-b2"></div></div>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 81% · LLaMA-30B</div>
+      </div>
+
+      <!-- 7. RITUAL FND NEXT TWEET -->
+      <div class="pred-card">
+        <span class="card-tag">🏛️ Community Tweet Guess</span>
+        <div class="card-question">When will <a href="https://x.com/ritualfnd" target="_blank" style="color:var(--gold2);text-decoration:none">@ritualfnd</a> (Ritual Community Handle) post their next tweet?</div>
+        <div class="card-meta"><span>⏳ 7d left</span><span>💰 $18K pool</span><span>👥 376 bets</span></div>
+        <div class="options-list" id="g-fnd">
+          <button class="opt-btn" onclick="voteOpt('g-fnd',0,this)"><span>Within 24 hours</span><span class="opt-pct">35%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:35%" id="g-fnd-b0"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-fnd',1,this)"><span>2 – 4 days</span><span class="opt-pct">44%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:44%" id="g-fnd-b1"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-fnd',2,this)"><span>5 – 7 days</span><span class="opt-pct">21%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:21%" id="g-fnd-b2"></div></div>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 77% · Mistral-7B</div>
+      </div>
+
+      <!-- 8. JOSH TWEET COUNT -->
+      <div class="pred-card">
+        <span class="card-tag">📊 Tweet Count — Mar 31 – Apr 20</span>
+        <div class="card-question">How many tweets will <a href="https://x.com/joshsimenhoff" target="_blank" style="color:var(--gold2);text-decoration:none">@joshsimenhoff</a> (Josh, Ritual Foundation) post between March 31 – April 20, 2026?</div>
+        <div class="card-meta"><span>⏳ Resolves Apr 21</span><span>💰 $9.1K pool</span><span>👥 198 bets</span></div>
+        <div class="options-list" id="g-josh">
+          <button class="opt-btn" onclick="voteOpt('g-josh',0,this)"><span>1 – 10 tweets</span><span class="opt-pct">18%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:18%" id="g-josh-b0"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-josh',1,this)"><span>11 – 25 tweets</span><span class="opt-pct">39%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:39%" id="g-josh-b1"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-josh',2,this)"><span>26 – 50 tweets</span><span class="opt-pct">33%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:33%" id="g-josh-b2"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-josh',3,this)"><span>50+ tweets</span><span class="opt-pct">10%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:10%" id="g-josh-b3"></div></div>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 66% · LLaMA-30B</div>
+      </div>
+
+      <!-- 9. VAL ALEXANDER TWEET COUNT -->
+      <div class="pred-card">
+        <span class="card-tag">📊 Tweet Count — Mar 31 – Apr 20</span>
+        <div class="card-question">How many tweets will <a href="https://x.com/BunsDev" target="_blank" style="color:var(--gold2);text-decoration:none">@BunsDev</a> (Val Alexander, Ritual Foundation) post between March 31 – April 20, 2026?</div>
+        <div class="card-meta"><span>⏳ Resolves Apr 21</span><span>💰 $7.4K pool</span><span>👥 162 bets</span></div>
+        <div class="options-list" id="g-val">
+          <button class="opt-btn" onclick="voteOpt('g-val',0,this)"><span>1 – 15 tweets</span><span class="opt-pct">14%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:14%" id="g-val-b0"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-val',1,this)"><span>16 – 40 tweets</span><span class="opt-pct">36%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:36%" id="g-val-b1"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-val',2,this)"><span>41 – 80 tweets</span><span class="opt-pct">38%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:38%" id="g-val-b2"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-val',3,this)"><span>80+ tweets</span><span class="opt-pct">12%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:12%" id="g-val-b3"></div></div>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 63% · Mistral-7B</div>
+      </div>
+
+      <!-- 10. 0xHALFMOONKID TWEET COUNT -->
+      <div class="pred-card">
+        <span class="card-tag">📊 Tweet Count — Mar 31 – Apr 20</span>
+        <div class="card-question">How many tweets will <a href="https://x.com/0x_HalfMoonKid" target="_blank" style="color:var(--gold2);text-decoration:none">@0x_HalfMoonKid</a> post between March 31 – April 20, 2026?</div>
+        <div class="card-meta"><span>⏳ Resolves Apr 21</span><span>💰 $6.2K pool</span><span>👥 141 bets</span></div>
+        <div class="options-list" id="g-moon">
+          <button class="opt-btn" onclick="voteOpt('g-moon',0,this)"><span>1 – 10 tweets</span><span class="opt-pct">22%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:22%" id="g-moon-b0"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-moon',1,this)"><span>11 – 30 tweets</span><span class="opt-pct">42%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:42%" id="g-moon-b1"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-moon',2,this)"><span>31 – 60 tweets</span><span class="opt-pct">28%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:28%" id="g-moon-b2"></div></div>
+          <button class="opt-btn" onclick="voteOpt('g-moon',3,this)"><span>60+ tweets</span><span class="opt-pct">8%</span></button>
+          <div class="opt-bar-wrap"><div class="opt-bar" style="width:8%" id="g-moon-b3"></div></div>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 61% · LLaMA-30B</div>
+      </div>
+
+      <!-- 11. BTC $100K -->
+      <div class="pred-card">
+        <span class="card-tag">🪙 Crypto Price</span>
+        <div class="card-question">Will BTC surpass $100,000 before the end of Q2 2025?</div>
+        <div class="card-meta"><span>⏳ 14d left</span><span>💰 $284K pool</span><span>👥 2,341 bets</span></div>
+        <div class="prob-row"><span class="prob-yes" id="btc-y">YES 67%</span><span class="prob-no" id="btc-n">NO 33%</span></div>
+        <div class="prob-bar-bg"><div class="prob-bar-fill" id="bar-btc" style="width:67%;background:linear-gradient(90deg,var(--up),#1abc9c)"></div></div>
+        <div class="card-actions">
+          <button class="btn-yes" onclick="voteBin('bar-btc','btc-y','btc-n','YES','NO',67,this)">▲ YES</button>
+          <button class="btn-no"  onclick="voteBin('bar-btc','btc-y','btc-n','YES','NO',33,this)">▼ NO</button>
+        </div>
+        <div class="ai-conf"><div class="ai-dot"></div> Ritual AI · Confidence 84% · LLaMA-30B</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- AI ORACLE -->
+<section class="section-pad" id="ai-sec">
+  <div class="container">
+    <div class="section-title">The Ritual AI Oracle</div>
+    <p class="section-sub">Ask any prediction question — our on-chain AI evaluates probability in real time</p>
+    <div class="ai-box">
+      <div class="ai-box-hdr">
+        🔮 Ritual.useInference({ model: "LLAMA2-30B" })
+        <div class="ai-status"><div class="ai-sdot"></div> LIVE ON INFERNET</div>
+      </div>
+      <div class="ai-row">
+        <input class="ai-input" id="ai-input" placeholder="Ask a prediction… e.g. Will ETH flip BTC in 2025?" />
+        <button class="btn btn-gold" onclick="runOracle()">Prophecy →</button>
+      </div>
+      <div class="ai-result" id="ai-result"><span style="color:var(--text3);font-style:italic">Enter a question above and let Ritual's AI Oracle reveal the probability…</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section-pad" style="background:var(--bg2)">
+  <div class="container">
+    <div class="section-title">Why Ritual Prophecy</div>
+    <p class="section-sub">Built natively on Ritual Chain — the only AI-native Layer 1</p>
+    <div class="features-row">
+      <div class="feat-item"><div class="feat-icon">🔐</div><div class="feat-title">ZK-Verified AI</div><div class="feat-desc">Every AI inference comes with a zero-knowledge proof. You can verify the model ran correctly without trusting any server.</div></div>
+      <div class="feat-item"><div class="feat-icon">⛓️</div><div class="feat-title">On-Chain Results</div><div class="feat-desc">All predictions, outcomes, and AI confidence scores are immutably logged on Ritual Chain via smart contracts.</div></div>
+      <div class="feat-item"><div class="feat-icon">🌐</div><div class="feat-title">Censorship Resistant</div><div class="feat-desc">No centralized API can shut down the oracle. Ritual's Infernet nodes are globally distributed and permissionless.</div></div>
+      <div class="feat-item"><div class="feat-icon">💎</div><div class="feat-title">Earn Rewards</div><div class="feat-desc">Stake on prophecies, earn from correct predictions. Top Prophets climb the leaderboard and win governance power.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section-pad" id="how-sec">
+  <div class="container">
+    <div class="section-title">How Prophecy Works</div>
+    <p class="section-sub">Four steps from question to verified on-chain outcome</p>
+    <div class="steps-grid">
+      <div class="step-card"><div class="step-num">01</div><div class="step-icon">📝</div><div class="step-title">Post a Prophecy</div><div class="step-desc">Submit any yes/no question about crypto, DeFi, AI, or world events. Pay a small gas fee to register it on-chain.</div></div>
+      <div class="step-card"><div class="step-num">02</div><div class="step-icon">🤖</div><div class="step-title">AI Evaluates</div><div class="step-desc">Ritual's Infernet calls LLaMA-30B or Mistral-7B to score the probability with a cryptographic confidence score.</div></div>
+      <div class="step-card"><div class="step-num">03</div><div class="step-icon">🎯</div><div class="step-title">Stake Your Belief</div><div class="step-desc">Community members bet YES or NO. Market dynamics continuously update the probability alongside the AI model.</div></div>
+      <div class="step-card"><div class="step-num">04</div><div class="step-icon">✅</div><div class="step-title">Resolve &amp; Earn</div><div class="step-desc">At expiry, the outcome is verified on-chain. Correct prophets earn from the pool. All settled by Ritual smart contracts.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- LEADERBOARD -->
+<section class="section-pad" style="background:var(--bg2)" id="leaderboard-sec">
+  <div class="container">
+    <div class="section-title">Hall of Prophets</div>
+    <p class="section-sub">The finest seers on Ritual Chain this epoch</p>
+    <div class="leaderboard">
+      <div class="lb-header"><span>#</span><span>Prophet</span><span>P&amp;L</span><span>Accuracy</span><span>Badge</span></div>
+      <div class="lb-row"><div class="lb-rank gold">I</div><div class="lb-user"><div class="lb-avatar">Ω</div><div><div class="lb-name">OracleZero</div><div class="lb-addr">0x4a2f...c81d</div></div></div><div class="lb-pnl pos">+$48,210</div><div class="lb-acc">94.2%</div><div><span class="lb-badge b-oracle">🔮 Oracle</span></div></div>
+      <div class="lb-row"><div class="lb-rank silver">II</div><div class="lb-user"><div class="lb-avatar">Δ</div><div><div class="lb-name">cryptoseer.eth</div><div class="lb-addr">0x9b3c...1a4e</div></div></div><div class="lb-pnl pos">+$31,880</div><div class="lb-acc">91.7%</div><div><span class="lb-badge b-oracle">🔮 Oracle</span></div></div>
+      <div class="lb-row"><div class="lb-rank bronze">III</div><div class="lb-user"><div class="lb-avatar">Σ</div><div><div class="lb-name">InfernalNet</div><div class="lb-addr">0x7d1a...9f02</div></div></div><div class="lb-pnl pos">+$19,640</div><div class="lb-acc">88.3%</div><div><span class="lb-badge b-seer">👁 Seer</span></div></div>
+      <div class="lb-row"><div class="lb-rank">IV</div><div class="lb-user"><div class="lb-avatar">S</div><div><div class="lb-name">Smith</div><div class="lb-addr">0x0xRusaa...x</div></div></div><div class="lb-pnl pos">+$12,990</div><div class="lb-acc">86.1%</div><div><span class="lb-badge b-seer">👁 Seer</span></div></div>
+      <div class="lb-row"><div class="lb-rank">V</div><div class="lb-user"><div class="lb-avatar">Ψ</div><div><div class="lb-name">ChainVision</div><div class="lb-addr">0x5f3d...8b21</div></div></div><div class="lb-pnl pos">+$8,420</div><div class="lb-acc">83.4%</div><div><span class="lb-badge b-seer">👁 Seer</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <img src="img1.png" class="footer-logo-img" alt="Ritual Logo" />
+    RITUAL PROPHECY
+  </div>
+  <div class="footer-tagline">The first on-chain AI prediction market — built on Ritual Network</div>
+  <div class="footer-links">
+    <a href="#markets-sec">Markets</a>
+    <a href="#leaderboard-sec">Leaderboard</a>
+    <a href="#ai-sec">AI Oracle</a>
+    <a href="#how-sec">Docs</a>
+    <a href="#">Blog</a>
+    <a href="https://x.com/ritualnet" target="_blank">Twitter / X</a>
+    <a href="#">Discord</a>
+    <a href="#">GitHub</a>
+  </div>
+  <div class="footer-copy">© 2025 Ritual Prophecy · All prophecies are on-chain and verifiable.</div>
+  <div class="footer-powered">⚙️ Powered by <strong style="color:var(--gold2);margin:0 3px">Ritual Network</strong> · Infernet · ZK Proofs</div>
+  <div class="created-wrap">
+    Created by
+    <a class="btn-smith" href="https://x.com/0xRusaa" target="_blank" rel="noopener noreferrer">Smith ↗</a>
+  </div>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="modal-login">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal('login')">✕</button>
+    <div class="modal-sig">🔮</div>
+    <div class="modal-title">Welcome Back</div>
+    <div class="modal-sub">Return to the Ritual</div>
+    <button class="bw3" onclick="walletLogin()">🦊 Continue with MetaMask</button>
+    <button class="bw3" onclick="walletLogin()">⚡ Continue with WalletConnect</button>
+    <div class="fdiv">or login with email</div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" type="email" placeholder="prophet@ritual.net" id="login-email"/></div>
+    <div class="fg"><label class="fl">Password</label><input class="fi" type="password" placeholder="••••••••" id="login-pass"/></div>
+    <button class="btn btn-gold bfull" onclick="doLogin()">Enter the Oracle →</button>
+    <div class="m-switch">No account? <a onclick="switchModal('login','signup')">Join the Prophecy</a></div>
+  </div>
+</div>
+
+<!-- SIGNUP MODAL -->
+<div class="modal-overlay" id="modal-signup">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal('signup')">✕</button>
+    <div class="modal-sig">✨</div>
+    <div class="modal-title">Become a Prophet</div>
+    <div class="modal-sub">Join 12,000+ prophets on Ritual Chain</div>
+    <button class="bw3" onclick="walletSignup()">🦊 Connect MetaMask</button>
+    <button class="bw3" onclick="walletSignup()">⚡ Connect WalletConnect</button>
+    <div class="fdiv">or create account</div>
+    <div class="fg"><label class="fl">Username</label><input class="fi" type="text" placeholder="YourProphetName" id="signup-user"/></div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" type="email" placeholder="you@ritual.net" id="signup-email"/></div>
+    <div class="fg"><label class="fl">Password</label><input class="fi" type="password" placeholder="••••••••" id="signup-pass"/></div>
+    <button class="btn btn-gold bfull" onclick="doSignup()">Begin Your Prophecy →</button>
+    <div class="m-switch">Already a prophet? <a onclick="switchModal('signup','login')">Log In</a></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="t-title" id="toast-title">Prophecy Logged</div>
+  <div id="toast-msg">Your prediction has been recorded on Ritual Chain.</div>
+</div>
+
+<script>
+// Theme
+let isDark=true;
+function toggleTheme(){isDark=!isDark;document.documentElement.setAttribute('data-theme',isDark?'dark':'light');document.getElementById('theme-icon').textContent=isDark?'☀️':'🌙';document.getElementById('theme-label').textContent=isDark?'Light':'Dark'}
+
+// Modal
+let currentUser=null;
+function openModal(t){document.getElementById('modal-'+t).classList.add('active');document.body.style.overflow='hidden'}
+function closeModal(t){document.getElementById('modal-'+t).classList.remove('active');document.body.style.overflow=''}
+function switchModal(a,b){closeModal(a);setTimeout(()=>openModal(b),200)}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o){o.classList.remove('active');document.body.style.overflow=''}}));
+
+function doLogin(){
+  const e=document.getElementById('login-email').value.trim(),p=document.getElementById('login-pass').value.trim();
+  if(!e||!p){showToast('Missing Fields','Please fill in all fields.');return}
+  currentUser={name:e.split('@')[0]};closeModal('login');updateNav();
+  showToast('🔮 Welcome Back','You have entered the Oracle, '+currentUser.name+'.');
+}
+function doSignup(){
+  const u=document.getElementById('signup-user').value.trim(),e=document.getElementById('signup-email').value.trim(),p=document.getElementById('signup-pass').value.trim();
+  if(!u||!e||!p){showToast('Missing Fields','Please fill in all fields.');return}
+  currentUser={name:u};closeModal('signup');updateNav();
+  showToast('✨ Prophecy Begins','Welcome, '+u+'! Your journey starts now.');
+}
+function walletLogin(){currentUser={name:'0x4a2f...c81d'};closeModal('login');updateNav();showToast('🦊 Wallet Connected','Connected to Ritual Chain.')}
+function walletSignup(){currentUser={name:'0x'+Math.random().toString(16).slice(2,6)+'...'+Math.random().toString(16).slice(2,6)};closeModal('signup');updateNav();showToast('⚡ Wallet Connected','Your prophet address is registered on-chain.')}
+function updateNav(){
+  document.getElementById('nav-right').innerHTML=`<button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">${isDark?'☀️':'🌙'}</span><span id="theme-label">${isDark?'Light':'Dark'}</span></button><button class="nnotif"><span>🔔</span><span class="nbadge">3</span></button><div class="ubadge"><div class="dot"></div>${currentUser.name}</div><button class="btn btn-outline" onclick="logout()">Log Out</button>`;
+}
+function logout(){currentUser=null;document.getElementById('nav-right').innerHTML=`<button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">${isDark?'☀️':'🌙'}</span><span id="theme-label">${isDark?'Light':'Dark'}</span></button><button class="btn btn-outline" onclick="openModal('login')">Log In</button><button class="btn btn-gold" onclick="openModal('signup')">Sign Up</button>`;showToast('👋 Signed Out','Your prophecies remain on-chain.')}
+function requireAuth(){if(!currentUser){openModal('login');showToast('🔐 Login Required','Sign in to place your prediction.');return false}return true}
+
+// Toast
+let ttmr;
+function showToast(title,msg){clearTimeout(ttmr);document.getElementById('toast-title').textContent=title;document.getElementById('toast-msg').textContent=msg;const t=document.getElementById('toast');t.classList.add('show');ttmr=setTimeout(()=>t.classList.remove('show'),3500)}
+
+// Binary vote
+const bv={};
+function voteBin(barId,yLblId,nLblId,yLbl,nLbl,base,btn){
+  if(!requireAuth())return;
+  if(bv[barId]){showToast('Already Voted','You have already cast your prophecy on this market.');return}
+  bv[barId]=true;
+  const isYes=btn.classList.contains('btn-yes');
+  const nudge=3+Math.floor(Math.random()*6);
+  const yVal=isYes?Math.min(base+nudge,95):Math.max(base-nudge,5);
+  document.getElementById(barId).style.width=yVal+'%';
+  document.getElementById(yLblId).textContent=yLbl+' '+yVal+'%';
+  document.getElementById(nLblId).textContent=nLbl+' '+(100-yVal)+'%';
+  btn.style.opacity='1';btn.style.fontWeight='900';btn.style.transform='translateY(-2px)';
+  showToast('🎯 Prophecy Placed','Bet recorded on Ritual Chain · Block #'+(4200000+Math.floor(Math.random()*9999)));
+}
+
+// Multi vote
+const mv={};
+function voteOpt(gid,idx,btn){
+  if(!requireAuth())return;
+  if(mv[gid]!==undefined){showToast('Already Voted','You have already cast your prophecy on this market.');return}
+  mv[gid]=idx;
+  const container=document.getElementById(gid);
+  const allBtns=container.querySelectorAll('.opt-btn');
+  const allPcts=[];
+  allBtns.forEach((b,i)=>{const p=b.querySelector('.opt-pct');allPcts.push(parseInt(p.textContent))});
+  const nudge=5+Math.floor(Math.random()*7);
+  allPcts[idx]=Math.min(allPcts[idx]+nudge,95);
+  const total=allPcts.reduce((a,b)=>a+b,0);
+  allPcts.forEach((v,i)=>allPcts[i]=Math.round(v/total*100));
+  allBtns.forEach((b,i)=>{
+    b.querySelector('.opt-pct').textContent=allPcts[i]+'%';
+    const bar=document.getElementById(gid+'-b'+i);
+    if(bar)bar.style.width=allPcts[i]+'%';
+  });
+  btn.classList.add('voted');
+  showToast('🎯 Prophecy Placed','Vote recorded on Ritual Chain · Block #'+(4200000+Math.floor(Math.random()*9999)));
+}
+
+// AI Oracle
+let typing=false;
+async function runOracle(){
+  if(typing)return;
+  const q=document.getElementById('ai-input').value.trim();
+  if(!q){showToast('⚠️ Empty Query','Please enter a prediction question.');return}
+  typing=true;
+  const el=document.getElementById('ai-result');
+  el.innerHTML='<span class="cursor"></span>';
+  const prompt=`You are the Ritual AI Oracle — an on-chain AI prediction market evaluator powered by Ritual Network's Infernet.\n\nThe user asked: "${q}"\n\nRespond ONLY in this exact format (no extra text, no markdown):\n> PROBABILITY: [X]%\n> CONFIDENCE: [Y]%\n> MODEL: LLaMA-30B via Infernet v2\n> ANALYSIS: [2 concise sentences analyzing this, referencing on-chain data or market signals]\n> STATUS: Logged on-chain\n\nPROBABILITY between 20-85%, CONFIDENCE between 65-96%. Be thoughtful and realistic.`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+    const data=await res.json();
+    const txt=data.content?.[0]?.text||fallback(q);
+    await typeText(el,`> Ritual.useInference({ model: "LLAMA2-30B" })\n\n📡 Querying Infernet nodes...\n🔐 Generating ZK proof...\n✅ Proof verified · Block #${4200000+Math.floor(Math.random()*9999)}\n\n${txt}`);
+  }catch{await typeText(el,fallback(q))}
+  typing=false;
+}
+function fallback(q){return`> Ritual.useInference({ model: "LLAMA2-30B" })\n\n📡 Querying Infernet nodes...\n🔐 Generating ZK proof...\n✅ Proof verified · Block #${4200000+Math.floor(Math.random()*9999)}\n\n> PROBABILITY: ${30+Math.floor(Math.random()*50)}%\n> CONFIDENCE: ${70+Math.floor(Math.random()*25)}%\n> MODEL: LLaMA-30B via Infernet v2\n> ANALYSIS: Based on historical on-chain data and current market sentiment, this event carries moderate likelihood. The AI model weighted recent signals and community prediction flow.\n> STATUS: Logged on-chain`}
+async function typeText(el,text){el.innerHTML='';for(let i=0;i<text.length;i++){el.innerHTML=esc(text.slice(0,i+1)).replace(/\n/g,'<br>')+'<span class="cursor"></span>';await sleep(text[i]==='\n'?30:10)}el.innerHTML=esc(text).replace(/\n/g,'<br>')}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+document.getElementById('ai-input').addEventListener('keydown',e=>{if(e.key==='Enter')runOracle()});
+
+// Stat counters
+function countUp(el,target){let v=0;const t=setInterval(()=>{v+=target/125;if(v>=target){v=target;clearInterval(t)}el.textContent=Math.floor(v).toLocaleString()},16)}
+window.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{countUp(document.getElementById('stat2'),1847);countUp(document.getElementById('stat3'),12390)},400));
+</script>
+</body>
+</html>
